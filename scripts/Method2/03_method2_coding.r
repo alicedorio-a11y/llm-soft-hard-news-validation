@@ -64,6 +64,7 @@ call_gpt_con_contenuto <- function(testo_articolo) {
   prompt <- paste0(
     "Sei un esperto codificatore di contenuti giornalistici. ",
     "Analizza TUTTO il contenuto dell'articolo fornito e codifica secondo il codebook.\n\n",
+    
     "RESTITUISCI SOLO UN JSON VALIDO con questi campi esatti:\n",
     "{\n",
     '  "societal_actors": 0/1,\n',
@@ -75,9 +76,44 @@ call_gpt_con_contenuto <- function(testo_articolo) {
     '  "personal_impersonal_R": 0/1/2,\n',
     '  "emotional_unemotional_R": 0/1/2\n',
     "}\n\n",
-    "IMPORTANTE: Rispondi SOLO con il JSON, nessun testo aggiuntivo.\n\n",
-    "CONTENUTO ARTICOLO DA ANALIZZARE:\n-------------------------------------------\n",
-    testo_articolo, "\n-------------------------------------------\n\n"
+    
+    "CODEBOOK per la codifica delle notizie:\n\n",
+    
+    "DIMENSIONE TOPIC - Rilevanza Politica (4 aspetti binari 0/1):\n",
+    "1. societal_actors: Due o più attori sociali in disaccordo su una questione sociale\n",
+    "   0 = non presente; 1 = presente\n",
+    "2. decision_authorities: Autorità decisionali coinvolte (legislativo, esecutivo, giudiziario)\n",
+    "   0 = non presente; 1 = presente\n",
+    "3. policy_plan: Sostanza di una decisione/misura/programma pianificato o realizzato\n",
+    "   0 = non presente; 1 = presente\n",
+    "4. actors_concerned: Persone/gruppi interessati o coinvolti\n",
+    "   0 = non presente; 1 = presente\n\n",
+    
+    "DIMENSIONI FOCUS (scale 0/1/2):\n",
+    "5. individual_societal_R: Rilevanza individuale vs sociale\n",
+    "   0 = individuale; 1 = misto; 2 = sociale\n",
+    "6. episodic_thematic_F: Framing episodico vs tematico\n",
+    "   0 = episodico; 1 = misto; 2 = tematico\n\n",
+    
+    "DIMENSIONI STILE (scale 0/1/2):\n",
+    "7. personal_impersonal_R: Stile personale vs impersonale\n",
+    "   0 = personale; 1 = misto; 2 = impersonale\n",
+    "8. emotional_unemotional_R: Stile emotivo vs non-emotivo\n",
+    "   0 = emotivo; 1 = misto; 2 = non-emotivo\n\n",
+    
+    "ESEMPI DI CODIFICA:\n",
+    "- Titolo su conflitto politico tra partiti → societal_actors=1, decision_authorities=1\n",
+    "- Titolo su cronaca locale singolo evento → societal_actors=0, individual_societal_R=0, episodic_thematic_F=0\n",
+    "- Titolo su riforma di legge → policy_plan=1, decision_authorities=1, episodic_thematic_F=2\n",
+    "- Titolo emotivo con testimonianze → emotional_unemotional_R=0, personal_impersonal_R=0\n\n",
+    
+    "CONTENUTO ARTICOLO DA ANALIZZARE:\n",
+    "-------------------------------------------\n",
+    testo_articolo,
+    "\n-------------------------------------------\n\n",
+    
+    "Solo se davvero impossibile determinare un valore, usa 999 per quel campo specifico.\n",
+    "IMPORTANTE: Rispondi SOLO con il JSON, senza alcun testo aggiuntivo."
   )
   res <- tryCatch({
     response <- POST(
